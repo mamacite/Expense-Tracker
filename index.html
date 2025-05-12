@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .instructions {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        input[type="text"], input[type="number"], select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .expense-list {
+            margin-top: 20px;
+            list-style: none;
+            padding: 0;
+        }
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            transition: background-color 0.3s;
+        }
+        .expense-item:hover {
+            background-color: #f0f8ff; /* Light blue on hover */
+        }
+        .remove {
+            background: #dc3545;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .remove:hover {
+            background: #c82333;
+        }
+        .clear-button {
+            background: #ffcc00;
+        }
+        .food {
+            background-color: #e7f3fe; /* Light blue for food expenses */
+        }
+        .transport {
+            background-color: #fce4d6; /* Light red for transport expenses */
+        }
+        .entertainment {
+            background-color: #d4edda; /* Light green for entertainment expenses */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Expense Tracker</h1>
+    <div class="instructions">
+        <p>Enter the name and amount of your expense, then click "Add Expense" to track it. You can remove expenses individually or clear all at once.</p>
+    </div>
+    
+    <label for="expenseName">Expense Name</label>
+    <input type="text" id="expenseName" placeholder="Expense Name" required />
+
+    <label for="expenseAmount">Amount</label>
+    <input type="number" id="expenseAmount" placeholder="Amount" required />
+    
+    <label for="expenseType">Expense Type</label>
+    <select id="expenseType">
+        <option value="food">Food</option>
+        <option value="transport">Transport</option>
+        <option value="entertainment">Entertainment</option>
+        <option value="other">Other</option>
+    </select>
+    
+    <button id="addExpenseButton">Add Expense</button>
+    <button class="clear-button" id="clearExpensesButton">Clear All Expenses</button>
+    
+    <ul class="expense-list" id="expenseList"></ul>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', loadExpenses); // Load expenses on page load
+
+    document.getElementById('addExpenseButton').addEventListener('click', function() {
+        const expenseName = document.getElementById('expenseName').value.trim();
+        const expenseAmount = parseFloat(document.getElementById('expenseAmount').value);
+        const expenseType = document.getElementById('expenseType').value;
+
+        if (expenseName && !isNaN(expenseAmount)) {
+            const expense = { name: expenseName, amount: expenseAmount, type: expenseType };
+            addExpense(expense);
+            saveExpense(expense);
+            clearInputs();
+        } else {
+            alert('Please enter valid expense details.');
+        }
+    });
+
+    document.getElementById('clearExpensesButton').addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear all expenses?')) {
+            document.getElementById('expenseList').innerHTML = '';
+            localStorage.removeItem('expenses'); // Clear localStorage
+        }
+    });
+
+    function loadExpenses() {
+        const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+        expenses.forEach(expense => addExpense(expense));
+    }
+
+    function addExpense(expense) {
+        const listItem = document.createElement('li');
+        listItem.className = `expense-item ${expense.type}`;
+        listItem.innerHTML = `
+            <span>${expense.name}: $${expense.amount.toFixed(2)}</span>
+            <button class="remove">Remove</button>
+        `;
+
+        listItem.querySelector('.remove').addEventListener('click', function() {
+            if (confirm('Are you sure you want to remove this expense?')) {
+                listItem.remove();
+                removeExpenseFromStorage(expense);
+            }
+        });
+
+        document.getElementById('expenseList').appendChild(listItem);
+    }
+
+    function saveExpense(expense) {
+        const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+        expenses.push(expense);
+        localStorage.setItem('expenses', JSON.stringify(expenses));
+    }
+
+    function removeExpenseFromStorage(expenseToRemove) {
+        let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+        expenses = expenses.filter(expense => 
+            expense.name !== expenseToRemove.name || 
+            expense.amount !== expenseToRemove.amount || 
+            expense.type !== expenseToRemove.type
+        );
+        localStorage.setItem('expenses', JSON.stringify(expenses));
+    }
+
+    function clearInputs() {
+        document.getElementById('expenseName').value = ''; // Clear input
+        document.getElementById('expenseAmount').value = ''; // Clear input
+    }
+</script>
+
+</body>
+</html>
